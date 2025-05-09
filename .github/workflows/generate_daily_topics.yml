@@ -23,6 +23,14 @@ jobs:
       - name: Install dependencies
         run: python -m pip install requests==2.31.0
 
+      - name: Check if HF_API_KEY is set
+        run: |
+          echo "Checking HF_API_KEY..."
+          if [ -z "${{ secrets.HF_API_KEY }}" ]; then
+            echo "Error: HF_API_KEY is not set" >&2
+            exit 1
+          fi
+
       - name: Run generate_topics.py
         run: |
           set -e
@@ -43,3 +51,4 @@ jobs:
             git add .blog_topics.json
             git commit -m "chore: update daily blog topics [skip ci]"
             git push
+          fi
