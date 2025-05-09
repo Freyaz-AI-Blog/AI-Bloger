@@ -3,8 +3,9 @@ import sys
 import json
 import requests
 
+# Ensure your Hugging Face API key is available as an environment variable
 HF_API_KEY = os.getenv("HF_API_KEY")
-API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2"
+API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 
 def query(payload):
     headers = {"Authorization": f"Bearer {HF_API_KEY}"}
