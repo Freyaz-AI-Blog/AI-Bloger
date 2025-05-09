@@ -2,7 +2,7 @@ name: Post Article Every 2 Hours
 
 on:
   schedule:
-    - cron: '0 */2 * * *'     # every 2 hours
+    - cron: '0 */2 * * *'  # Every 2 hours
   workflow_dispatch:
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install requests
 
-      - name: Generate topics (if needed)
+      - name: Generate topics
         run: python generate_topics.py
         env:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
@@ -31,5 +31,5 @@ jobs:
       - name: Post next article
         run: python post_article.py
         env:
-          HF_API_KEY:    ${{ secrets.HF_API_KEY }}
-          ACCESS_TOKEN:  ${{ secrets.ACCESS_TOKEN }}
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}

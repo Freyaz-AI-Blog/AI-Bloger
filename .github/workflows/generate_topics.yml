@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write         # allow commit & push
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -20,10 +21,11 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: python -m pip install requests
+        run: python -m pip install requests==2.31.0
 
       - name: Run generate_topics.py
         run: |
+          set -e
           echo "Running topic generation..."
           python generate_topics.py
         env:
@@ -37,6 +39,7 @@ jobs:
           if git diff --quiet; then
             echo "No new topics to commit"
           else
+            echo "Changes detected, committing new topics..."
             git add .blog_topics.json
             git commit -m "chore: update daily blog topics [skip ci]"
             git push
