@@ -1,67 +1,47 @@
-name: Auto Publish Blog
+name: Generate and Publish Blog Article
 
 on:
   schedule:
-    - cron: '0 */2 * * *'  # Every 2 hours
+    - cron: '0 */2 * * *' # Every 2 hours
   workflow_dispatch:
 
 jobs:
-  publish:
+  build-and-publish:
     runs-on: ubuntu-latest
 
-    steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
-      # Step 2: Set up Python
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
-          if [ ! -f requirements.txt ]; then
-            echo "requirements.txt not found. Exiting."
-            exit 1
-          fi
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Step 4: Load environment variables and validate HF_API_KEY
-      - name: Load environment variables
-        env:
-          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+      - name: Generate Topics
         run: |
-          echo "Starting environment variable validation..."
-          # Validate HF_API_KEY
-          if [ -z "$HF_API_KEY" ]; then
-            echo "HF_API_KEY is not set. Exiting."
-            exit 1
-          else
-            echo "HF_API_KEY is set."
-          fi
+          python generate_topics.py
 
-      # Step 5: Debugging environment variables (optional)
-      - name: Debug HF_API_KEY
+      - name: Generate Article
         run: |
-          echo "Testing HF_API_KEY is loaded."
-          if [ -z "$HF_API_KEY" ]; then
-            echo "HF_API_KEY is not set. Exiting."
-            exit 1
-          else
-            echo "HF_API_KEY is set and ready for use."
-          fi
+          python generate_article.py
 
-      # Step 6: Generate new blog topics
-      - name: Generate new blog topics
-        run: python generate_topics.py
+      - name: Post Article
+        run: |
+          python post_article.py
 
-      # Step 7: Generate blog article
-      - name: Generate blog article
-        run: python generate_article.py
-
-      # Step 8: Post blog article
-      - name: Post blog article
-        run: python post_article.py
+      - name: Commit and Push New Article
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          git add .
+          git commit -m "chore: publish new article" || echo "No changes to commit"
+          git push
