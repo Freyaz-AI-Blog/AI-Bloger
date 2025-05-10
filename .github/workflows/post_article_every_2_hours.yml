@@ -30,11 +30,16 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Exit if no topics left
+      - name: Validate topics file
         run: |
           if [ ! -f .blog_topics.json ]; then
             echo "No topic file found. Skipping."
             exit 0
+          fi
+
+          if ! jq empty .blog_topics.json > /dev/null 2>&1; then
+            echo "Invalid JSON in .blog_topics.json. Please fix the file."
+            exit 1
           fi
 
           if [ $(jq 'length' .blog_topics.json) -eq 0 ]; then
