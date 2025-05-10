@@ -25,15 +25,9 @@ jobs:
 
       - name: Generate topics
         run: python generate_topics.py
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Generate article
         run: python generate_article.py
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Post article
         run: python post_article.py
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
