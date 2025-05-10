@@ -2,32 +2,52 @@ name: Generate and Post Blog Article
 
 on:
   schedule:
-    - cron: "0 */2 * * *"  # Every 2 hours
+    - cron: '0 */2 * * *'  # Every 2 hours
   workflow_dispatch:
 
 jobs:
-  generate-and-post:
+  post_article:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.10
+          python-version: '3.10'
 
       - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Set environment variables
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          echo "HF_API_KEY=${{ secrets.HF_API_KEY }}" >> $GITHUB_ENV
+          echo "ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Generate topics
-        run: python generate_topics.py
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Generate article
-        run: python generate_article.py
+      - name: Exit if no topics left
+        run: |
+          if [ ! -f .blog_topics.json ]; then
+            echo "No topic file found. Skipping."
+            exit 0
+          fi
 
-      - name: Post article
-        run: python post_article.py
+          if [ $(jq 'length' .blog_topics.json) -eq 0 ]; then
+            echo "No more topics to post today. Skipping."
+            exit 0
+          fi
+
+      - name: Generate and Post Article
+        run: |
+          python post_article.py
+
+      - name: Commit updated topic file and new post
+        run: |
+          git add .blog_topics.json posts/
+          git commit -m "feat: auto post article"
+          git push
