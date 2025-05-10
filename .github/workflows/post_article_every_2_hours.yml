@@ -42,12 +42,21 @@ jobs:
             exit 0
           fi
 
+      - name: Prepare Current Topic and Article
+        run: |
+          if [ ! -f .blog_topics.json ]; then
+            echo "[]" > .blog_topics.json
+          fi
+
+          TOPIC=$(jq -r '.[0]' .blog_topics.json)
+          if [ "$TOPIC" == "null" ]; then
+            echo "No topics available in .blog_topics.json. Exiting."
+            exit 1
+          fi
+
+          echo $TOPIC > .current_topic.txt
+          echo "Generated article content for $TOPIC" > .current_article.txt
+
       - name: Generate and Post Article
         run: |
           python post_article.py
-
-      - name: Commit updated topic file and new post
-        run: |
-          git add .blog_topics.json posts/
-          git commit -m "feat: auto post article"
-          git push
