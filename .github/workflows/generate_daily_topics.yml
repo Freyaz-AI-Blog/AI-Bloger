@@ -1,54 +1,36 @@
-name: Generate Daily Topics
+name: Generate Daily Blog Topics
 
 on:
   schedule:
-    - cron: '0 0 * * *'      # every day at 00:00 UTC
-  workflow_dispatch:          # manual trigger
+    - cron: '0 0 * * *'  # Every day at 00:00 UTC
+  workflow_dispatch:
 
 jobs:
-  generate:
+  generate_topics:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write         # allow commit & push
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: python -m pip install requests==2.31.0
-
-      - name: Check if HF_API_KEY is set
         run: |
-          echo "Checking HF_API_KEY..."
-          if [ -z "${{ secrets.HF_API_KEY }}" ]; then
-            echo "Error: HF_API_KEY is not set" >&2
-            exit 1
-          fi
+          pip install -r requirements.txt
 
-      - name: Run generate_topics.py
-        run: |
-          set -e
-          echo "Running topic generation..."
-          python generate_topics.py
-        env:
-          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+      - name: Set environment variable
+        run: echo "HF_API_KEY=${{ secrets.HF_API_KEY }}" >> $GITHUB_ENV
 
-      - name: Commit & push .blog_topics.json
+      - name: Generate 10 blog topics
+        run: python generate_topics.py
+
+      - name: Commit generated topics
         run: |
-          git config --global user.name  "github-actions[bot]"
+          git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          if git diff --quiet; then
-            echo "No new topics to commit"
-          else
-            echo "Changes detected, committing new topics..."
-            git add .blog_topics.json
-            git commit -m "chore: update daily blog topics [skip ci]"
-            git push
-          fi
+          git add .blog_topics.json
+          git commit -m "chore: daily blog topics"
+          git push

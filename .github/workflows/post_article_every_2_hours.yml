@@ -1,4 +1,4 @@
-name: Post Article Every 2 Hours
+name: Generate and Post Blog Article
 
 on:
   schedule:
@@ -6,30 +6,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  post:
+  post_article:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
 
-      - uses: actions/setup-python@v5
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: python -m pip install requests
+        run: pip install -r requirements.txt
 
-      - name: Generate topics
-        run: python generate_topics.py
-        env:
-          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+      - name: Set environment variables
+        run: |
+          echo "HF_API_KEY=${{ secrets.HF_API_KEY }}" >> $GITHUB_ENV
+          echo "ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Post next article
-        run: python post_article.py
-        env:
-          HF_API_KEY: ${{ secrets.HF_API_KEY }}
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Exit if no topics left
+        run: |
+          if [ ! -f .blog_topics.json ]; then
+            echo "No topic file found. Skipping."
+            exit 0
+          fi
+
+          if [ $(jq 'length' .blog_topics.json) -eq 0 ]; then
+            echo "No more topics to post today. Skipping."
+            exit 0
+          fi
+
+      - name: Generate and Post Article
+        run: |
+          python post_article.py
+
+      - name: Commit updated topic file and new post
+        run: |
+          git add .blog_topics.json posts/
+          git commit -m "feat: auto post article"
+          git push
