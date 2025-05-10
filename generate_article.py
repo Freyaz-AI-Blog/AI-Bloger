@@ -18,7 +18,12 @@ def query(prompt):
         print(f"Error: {response.status_code} - {response.text}")
         sys.exit(1)
 
-    return response.json()[0]["generated_text"]
+    data = response.json()
+    if isinstance(data, list) and "generated_text" in data[0]:
+        return data[0]["generated_text"]
+    else:
+        print("Unexpected response format:", data)
+        sys.exit(1)
 
 def generate_article(topic):
     prompt = f"Write a detailed, engaging blog post about: {topic}"
@@ -26,6 +31,7 @@ def generate_article(topic):
 
 if __name__ == "__main__":
     topic_file = ".blog_topics.json"
+
     if not os.path.exists(topic_file):
         print("Topic file not found.")
         sys.exit(1)
@@ -37,7 +43,8 @@ if __name__ == "__main__":
         print("No topics left.")
         sys.exit(0)
 
-    topic = topics[0]
+    topic = topics.pop(0)  # take the first topic and remove it
+
     article = generate_article(topic)
 
     with open(".current_topic.txt", "w") as f:
@@ -45,5 +52,8 @@ if __name__ == "__main__":
 
     with open(".current_article.txt", "w") as f:
         f.write(article)
+
+    with open(topic_file, "w") as f:
+        json.dump(topics, f, indent=2)  # update topic file
 
     print("Article generated and saved.")
