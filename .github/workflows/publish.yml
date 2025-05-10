@@ -27,7 +27,13 @@ jobs:
           pip install -r requirements.txt
 
       - name: Load environment variables
+        env:
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
+          if [ -z "$HF_API_KEY" ]; then
+            echo "HF_API_KEY is not set. Exiting."
+            exit 1
+          fi
           if [ -f .env ]; then
             export $(cat .env | grep -v ^# | xargs)
           fi
@@ -40,4 +46,3 @@ jobs:
 
       - name: Post blog article
         run: python post_article.py
-
