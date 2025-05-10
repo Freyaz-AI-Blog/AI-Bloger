@@ -3,15 +3,16 @@ import sys
 import json
 import requests
 
-HF_API_KEY = os.getenv("HF_API_KEY")
-if not HF_API_KEY:
-    print("Error: HF_API_KEY environment variable is not set.")
-    sys.exit(1)  # Exit the script early if the API key is missing
+# Use the correct environment variable set in GitHub Actions
+HF_TOKEN = os.getenv("HF_TOKEN")
+if not HF_TOKEN:
+    print("Error: HF_TOKEN environment variable is not set.")
+    sys.exit(1)
 
 API_URL = "https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.3"
 
 def query(payload):
-    headers = {"Authorization": f"Bearer {HF_API_KEY}"}
+    headers = {"Authorization": f"Bearer {HF_TOKEN}"}
     response = requests.post(API_URL, headers=headers, json=payload)
 
     if response.status_code != 200:
@@ -36,4 +37,3 @@ def generate_topics():
 
 if __name__ == "__main__":
     generate_topics()
-
