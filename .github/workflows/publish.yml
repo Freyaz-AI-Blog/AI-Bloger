@@ -1,47 +1,36 @@
-name: Generate and Publish Blog Article
+name: Generate and Publish AI Blog
 
 on:
-  schedule:
-    - cron: '0 */2 * * *' # Every 2 hours
   workflow_dispatch:
+  schedule:
+    - cron: '0 */2 * * *'  # Every 2 hours
 
 jobs:
-  build-and-publish:
+  generate-and-publish:
     runs-on: ubuntu-latest
-
-    env:
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Generate Topics
-        run: |
-          python generate_topics.py
+      - name: Set HF_TOKEN environment variable
+        run: echo "HF_TOKEN=${{ secrets.HF_TOKEN }}" >> $GITHUB_ENV
 
-      - name: Generate Article
-        run: |
-          python generate_article.py
+      - name: Generate topics
+        run: python generate_topics.py
+        env:
+          HF_API_KEY: ${{ secrets.HF_TOKEN }}  # Set HF_API_KEY from GitHub secrets
 
-      - name: Post Article
-        run: |
-          python post_article.py
+      - name: Generate article
+        run: python generate_article.py
 
-      - name: Commit and Push New Article
-        run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-          git add .
-          git commit -m "chore: publish new article" || echo "No changes to commit"
-          git push
+      - name: Post article
+        run: python post_article.py
