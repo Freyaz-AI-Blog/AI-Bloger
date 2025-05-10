@@ -1,0 +1,4 @@
+echo "requests==2.31.0
+beautifulsoup4==4.12.2
+openai==1.13.3
+python-dotenv==1.0.1" > requirements.txt
