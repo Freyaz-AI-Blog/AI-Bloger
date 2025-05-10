@@ -30,6 +30,10 @@ jobs:
 
       - name: Generate article
         run: python generate_article.py
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
 
       - name: Post article
         run: python post_article.py
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
