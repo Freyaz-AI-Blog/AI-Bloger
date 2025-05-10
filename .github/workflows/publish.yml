@@ -10,14 +10,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Step 2: Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           if [ ! -f requirements.txt ]; then
@@ -26,23 +29,39 @@ jobs:
           fi
           pip install -r requirements.txt
 
+      # Step 4: Load environment variables and validate HF_API_KEY
       - name: Load environment variables
         env:
           HF_API_KEY: ${{ secrets.HF_API_KEY }}
         run: |
+          echo "Starting environment variable validation..."
+          # Validate HF_API_KEY
           if [ -z "$HF_API_KEY" ]; then
             echo "HF_API_KEY is not set. Exiting."
             exit 1
-          fi
-          if [ -f .env ]; then
-            export $(cat .env | grep -v ^# | xargs)
+          else
+            echo "HF_API_KEY is set."
           fi
 
+      # Step 5: Debugging environment variables (optional)
+      - name: Debug HF_API_KEY
+        run: |
+          echo "Testing HF_API_KEY is loaded."
+          if [ -z "$HF_API_KEY" ]; then
+            echo "HF_API_KEY is not set. Exiting."
+            exit 1
+          else
+            echo "HF_API_KEY is set and ready for use."
+          fi
+
+      # Step 6: Generate new blog topics
       - name: Generate new blog topics
         run: python generate_topics.py
 
+      # Step 7: Generate blog article
       - name: Generate blog article
         run: python generate_article.py
 
+      # Step 8: Post blog article
       - name: Post blog article
         run: python post_article.py
